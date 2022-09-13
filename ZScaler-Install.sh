@@ -7,9 +7,12 @@
 #	ZScaler-Install.sh
 #	https://github.com/Headbolt/ZScaler-Install
 #
-#   This Script is designed for use in JAMF
+#   This Script is designed for use in JAMF and was designed to Download a specified version of the ZScalercheck installer and install it
 #
-#   This script was designed to Download a specified version of the ZScalercheck installer and install it
+#	The Following Variables should be defined
+#	Variable 4 - Named "Download URL for Client Connector - eg. https://d32a6ru7mhaq0c.cloudfront.net/Zscaler-osx-3.6.1.19-installer.app.zip"
+#	Variable 5 - Named "Cloud Name - eg. ZCloud"
+#	Variable 6 - Named "User Domain - eg. domain.com - OPTIONAL"
 #
 ###############################################################################################################################################
 #
@@ -26,7 +29,7 @@
 #
 ###############################################################################################################################################
 #
-DownloadURL=$4
+DownloadURL=$4 # Grab the Download URL for the installer from JAMF variable #4 eg. https://d32a6ru7mhaq0c.cloudfront.net/Zscaler-osx-3.6.1.19-installer.app.zip
 CloudName=$5
 UserDomain=$6
 ScriptName="append prefix here as needed - Deploy - Z Scaler" # Set the name of the script for later logging
@@ -43,6 +46,54 @@ ScriptName="append prefix here as needed - Deploy - Z Scaler" # Set the name of 
 #
 # Defining Functions
 #
+###############################################################################################################################################
+#
+# Variable Check Function
+#
+VarCheck(){
+#
+/bin/echo 'Checking that the required Variables are set' # Check that the required variables are set
+/bin/echo # Outputting a Blank Line for Reporting Purposes
+#
+if [ "${DownloadURL}" == "" ]
+	then
+		/bin/echo 'DownloadURL undefined.  Please pass the DownloadURL in parameter 4'
+        ExitCode=4
+		SectionEnd
+		ScriptEnd
+	else
+    	/bin/echo 'DownloadURL Defined as '"$DownloadURL"''
+fi
+#
+/bin/echo # Outputting a Blank Line for Reporting Purposes
+if [ "${CloudName}" == "" ]
+	then
+		/bin/echo 'CloudName undefined.  Please pass the CloudName in parameter 5'
+    	ExitCode=4
+        SectionEnd
+    	ScriptEnd
+	else
+		/bin/echo 'CloudName Defined as '"$CloudName"''
+
+fi
+#
+/bin/echo # Outputting a Blank Line for Reporting Purposes
+if [ "${UserDomain}" == "" ]
+	then
+		/bin/echo 'UserDomain undefined, this is not required.'
+		/bin/echo 'Proceeding with User Domain empty, if this is requred please pass the UserDomain in parameter 6'
+		UserDomainSetting=""
+	else
+		UserDomainSetting="--userDomain $UserDomain"
+		/bin/echo 'UserDomain Defined as '"$UserDomain"''
+fi
+#
+/bin/echo # Outputting a Blank Line for Reporting Purposes
+/bin/echo Required Variables appear to be set
+#
+}
+#
+
 ###############################################################################################################################################
 #
 # Section End Function
@@ -83,6 +134,9 @@ exit $ExitCode
 /bin/echo # Outputting a Blank Line for Reporting Purposes
 SectionEnd
 #
+VarCheck
+SectionEnd
+#
 /bin/echo "`date` - Check for Existence of Pre_Existing Zscaler.zip"
 if test -f /tmp/zscaler.zip
 	then
@@ -94,6 +148,7 @@ fi
 #
 /bin/echo "`date` - Downloading Requested Version Of Zscaler"
 /bin/echo 'Running Command "curl -L -s -k -o  /tmp/zscaler.zip '$DownloadURL' || { /bin/echo ; /bin/echo "`date` Download failed. Exiting" >&2; ExitCode=1; SectionEnd; ScriptEnd; }"'
+/bin/echo # Outputting a Blank Line for Reporting Purposes
 curl -L -s -k -o  /tmp/zscaler.zip $DownloadURL || { /bin/echo ; /bin/echo "`date` Download failed. Exiting" >&2; ExitCode=1 ;SectionEnd; ScriptEnd; } # Download client zip archive to /tmp
 SectionEnd
 #
@@ -115,19 +170,22 @@ sudo unzip -q zscaler.zip || { /bin/echo ;/bin/echo "`date` Cannot decompress da
 /bin/echo # Outputting a Blank Line for Reporting Purposes
 /bin/echo "`date` - Removing Zscaler .Zip Download"
 /bin/echo /bin/echo 'Running Command "sudo rm -rf zscaler.zip"'
+/bin/echo # Outputting a Blank Line for Reporting Purposes
 sudo rm -rf zscaler.zip # Cleanup by removing downloaded archive
 SectionEnd
 #
 NewBinary=$(ls /tmp | grep "Zscaler-osx") # Get the installer string
 /bin/echo "`date` installing Zscaler"
 # Execute the install script. Add additional install options if needed.
-/bin/echo 'Running Command "sudo sh /tmp/$NewBinary/Contents/MacOS/installbuilder.sh --cloudName '$CloudName' --unattendedmodeui none --userDomain '$UserDomain' --mode unattended || { /bin/echo ;/bin/echo "`date` Client Connector install failed. Exiting" >&2;  ExitCode=3; SectionEnd; ScriptEnd; }"'
-sudo sh /tmp/$NewBinary/Contents/MacOS/installbuilder.sh --cloudName $CloudName --unattendedmodeui none --userDomain $UserDomain --mode unattended || { /bin/echo ;/bin/echo "`date` Client Connector install failed. Exiting" >&2;  ExitCode=3; SectionEnd; ScriptEnd; }
+/bin/echo 'Running Command "sudo sh /tmp/$NewBinary/Contents/MacOS/installbuilder.sh --cloudName '$CloudName' --unattendedmodeui none '$UserDomainSetting' --mode unattended || { /bin/echo ;/bin/echo "`date` Client Connector install failed. Exiting" >&2;  ExitCode=3; SectionEnd; ScriptEnd; }"'
+/bin/echo # Outputting a Blank Line for Reporting Purposes
+sudo sh /tmp/$NewBinary/Contents/MacOS/installbuilder.sh --cloudName $CloudName --unattendedmodeui none $UserDomainSetting --mode unattended || { /bin/echo ;/bin/echo "`date` Client Connector install failed. Exiting" >&2;  ExitCode=3; SectionEnd; ScriptEnd; }
 SectionEnd
 #
 /bin/echo "`date` - Removing Zscaler Installer"
 /bin/echo 'Running Command "sudo rm -rf $NewBinary # Cleanup by removing installer"'
 sudo rm -rf $NewBinary # Cleanup by removing installer
+SectionEnd
 #
 ExitCode=0
 ScriptEnd
