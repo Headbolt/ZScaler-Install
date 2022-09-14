@@ -20,8 +20,14 @@
 #
 #   Version: 1.0 - 13/09/2022
 #
-#   - 13/09/2022 - V1.0 - Created by Headbolt, by adapting and improving script by Niladri Datta @ ZScaler 
-#							https://community.zscaler.com/t/guide-zscaler-client-connector-deployment-with-jamf-pro-for-macos/16264
+#	13/09/2022 - V1.0 - Created by Headbolt, by adapting download and install commands found in script posted Niladri Datta @ ZScaler 
+#			https://community.zscaler.com/t/guide-zscaler-client-connector-deployment-with-jamf-pro-for-macos/16264
+#
+#	14/09/2022 - NOTE - It would appear these commands were pulled from a script by Harry Richman without credit by Zscaler staff
+#			https://github.com/aharon-br/jamf-scripts/blob/master/Download%20and%20Install%20Zscaler%20for%20Jamf.sh
+#			This was discovered after posting this solution to a JAMF Nation thread with no marked answer, and without reading
+#			the full thread, which Harry Richman posted on shortly after, to highlight this.
+#			This note is to aknowledge Harry Richman's initial efforts, and to thank him for it.
 #
 ###############################################################################################################################################
 #
